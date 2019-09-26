@@ -11,21 +11,14 @@ package learnjava.IO;
    Пример команды – deserialize output.data
 */
 
-import learnjava.StudentsHashMap.Skill;
 import learnjava.StudentsHashMap.Student;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
     static Scanner sc = new Scanner(System.in);
-    static  Map<Student, Skill> reestr= new HashMap<>();
-
+    static  ArrayList<Student> reestr= new ArrayList<>();
     public static void main(String[] args) {
         ReadCommand();
     }
@@ -33,12 +26,21 @@ public class Main {
     static void ReadCommand(){
         System.out.print("Введите команду: ");
         String command = sc.next();
-        if(command.equals("read")) { //вводим команду read{
-            ReadFromFile();
-        }else if(command.equals("write")){
-            WriteToFile();
-        }else if(command.equals("exit")){
-            return;
+        switch (command) {
+            case "read":
+                ReadFromFile();
+                break;
+            case "serialize":
+                Serialize();
+                break;
+            case "exit":
+                return;
+            case "deserialize":
+                Deserialize();
+                break;
+            default:
+                System.out.println("Команда не распознана, повторите попытку.");
+                ReadCommand();
         }
     }
 
@@ -52,8 +54,7 @@ public class Main {
                 String[] line = buffer.split("=", 3); //делим на 3 стринга - "Name" , "Ivan age" , "20"
                 String name = line[1].split(" ")[0];
                 int age = Integer.parseInt(line[2]);
-                // System.out.println(name + "-" + age); //DEBUG
-                reestr.put(new Student(name,age),new Skill("skill"));
+                reestr.add(new Student(name,age));
             }
             System.out.println("Чтение из файла успешно завершено. Найдено "+reestr.size()+" студентов.");
             ReadCommand();
@@ -63,14 +64,32 @@ public class Main {
         }
     }
 
-    static void WriteToFile(){
+    static void Serialize(){
         if(reestr.isEmpty()){
             System.out.println("Реестр студентов пуст, сначала заполните его командой 'read'");
             ReadCommand();
         }else{
-            //TODO добавить запись в файл
-            System.out.println("Запись студентов из коллекции в файл выполнена успшено. (нет)");
+            try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("C://JavaFiles/studentsSerialized.dat"))){
+                    oos.writeObject(reestr);
+            }catch (Exception ex){
+                System.out.println(ex.getMessage());
+            }
+            System.out.println("Сериализация студентов из коллекции в файл выполнена успшено. (нет)" );
             ReadCommand();
         }
+    }
+
+    static void Deserialize(){
+        ArrayList<Student> studentArrayList;
+        try(ObjectInputStream ois = new ObjectInputStream(new FileInputStream("C://JavaFiles/studentsSerialized.dat"))){
+            studentArrayList = (ArrayList<Student>)ois.readObject();
+            for(Student student : studentArrayList){
+                System.out.println(student.toString());
+            }
+        }catch (Exception ex){
+            System.out.println(ex.getMessage());
+        }
+        System.out.println("Десериализация выполнена успешно");
+        ReadCommand();
     }
 }
